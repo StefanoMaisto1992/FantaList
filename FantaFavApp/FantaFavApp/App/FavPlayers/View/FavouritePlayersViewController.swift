@@ -22,7 +22,6 @@ class FavouritePlayersViewController: UIViewController, ViewModelBindable {
 
     private var viewModel: FavouritePlayersViewModel!
     private var cancellables: Set<AnyCancellable> = []
-    private var searchCancellable: AnyCancellable?
     
     //UI elements
     @IBOutlet private weak var searchPlayersTextField: SearchTextView!
