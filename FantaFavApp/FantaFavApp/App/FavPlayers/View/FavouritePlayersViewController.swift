@@ -228,7 +228,7 @@ extension FavouritePlayersViewController: PlayerTableViewCellDelegate {
     }
     
 }
-//MARK: - UITextFieldDelegate
+//MARK: - SearchTextViewDelegate
 extension FavouritePlayersViewController: SearchTextViewDelegate {
     func textViewDidChange(text: String) {
         if text.count >= 3 {
