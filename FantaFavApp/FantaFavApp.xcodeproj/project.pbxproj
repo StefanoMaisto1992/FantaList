@@ -20,6 +20,7 @@
 		3B1F764A2D15A1D6000D4B53 /* FavouritePlayersViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3B1F763D2D15A1D6000D4B53 /* FavouritePlayersViewController.xib */; };
 		3B1F764B2D15A1D6000D4B53 /* FavouritePlayersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B1F763E2D15A1D6000D4B53 /* FavouritePlayersViewModel.swift */; };
 		3B1F764C2D15A1D6000D4B53 /* ImageUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B1F76412D15A1D6000D4B53 /* ImageUtilities.swift */; };
+		3BA9B5972D1962EE00CEAE65 /* SearchTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BA9B5962D1962EE00CEAE65 /* SearchTextView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +39,7 @@
 		3B1F763D2D15A1D6000D4B53 /* FavouritePlayersViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = FavouritePlayersViewController.xib; sourceTree = "<group>"; };
 		3B1F763E2D15A1D6000D4B53 /* FavouritePlayersViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FavouritePlayersViewModel.swift; sourceTree = "<group>"; };
 		3B1F76412D15A1D6000D4B53 /* ImageUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageUtilities.swift; sourceTree = "<group>"; };
+		3BA9B5962D1962EE00CEAE65 /* SearchTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTextView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				3B1F76382D15A1D6000D4B53 /* CustomCell */,
+				3BA9B5962D1962EE00CEAE65 /* SearchTextView.swift */,
 			);
 			path = UIComponents;
 			sourceTree = "<group>";
@@ -233,6 +236,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3B1F76462D15A1D6000D4B53 /* PlayerTableViewCell.swift in Sources */,
+				3BA9B5972D1962EE00CEAE65 /* SearchTextView.swift in Sources */,
 				3B1F764C2D15A1D6000D4B53 /* ImageUtilities.swift in Sources */,
 				3B1F764B2D15A1D6000D4B53 /* FavouritePlayersViewModel.swift in Sources */,
 				3B1F761F2D15A17D000D4B53 /* AppDelegate.swift in Sources */,

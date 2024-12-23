@@ -8,7 +8,7 @@
 import UIKit
 
 protocol PlayerTableViewCellDelegate: AnyObject {
-    func favouriteSelectionDidTap(playerId: Int)
+    func favouriteSelectionDidTap(playerId: Int, at indexPath: IndexPath)
 }
 
 class PlayerTableViewCell: UITableViewCell {
@@ -30,7 +30,7 @@ class PlayerTableViewCell: UITableViewCell {
     }
     
     weak var delegate: PlayerTableViewCellDelegate?
-    private var playerId: Int?
+    private var playerId: Int?, indexPath: IndexPath?
     private var isFavourite: Bool = false
     
     override func awakeFromNib() {
@@ -54,14 +54,14 @@ class PlayerTableViewCell: UITableViewCell {
     }
     
     @IBAction private func favTapAction(_ sender: UIButton) {
-        if let playerId = playerId {
-            delegate?.favouriteSelectionDidTap(playerId: playerId)
+        if let playerId = playerId, let indexPath {
+            delegate?.favouriteSelectionDidTap(playerId: playerId, at: indexPath)
             isFavourite.toggle()
             updateFavouriteIcon()
         }
     }
     
-    public func fillCell(player: Player, isFavMode: Bool = false, isFavourite: Bool) {
+    public func fillCell(player: Player, isFavMode: Bool = false, isFavourite: Bool, indexPath: IndexPath) {
         playerImageView.setImage(from: player.imageURL)
         playerNameLabel.text = player.playerName
         clubNameLabel.text = player.teamAbbreviation
@@ -70,6 +70,7 @@ class PlayerTableViewCell: UITableViewCell {
         mfvValueLabel.text = String(format: "%.2f", player.averageFantaGrade)
         // Salva l'ID del giocatore
         self.playerId = player.playerId
+        self.indexPath = indexPath
         self.isFavMode = isFavMode
         favButton.setImage(UIImage(systemName: isFavourite ? "star.fill" : "star"), for: .normal)
     }

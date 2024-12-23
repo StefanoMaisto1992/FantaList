@@ -20,12 +20,29 @@ class FavouritePlayersViewModel: ObservableObject {
     @Published var isLoading: Bool = false       // Stato di caricamento
     @Published var errorMessage: String?
     
-    @Published var mode: TabMode = .playersList // default case
+    var isFiltered: Bool = false {
+        willSet (isActive) {
+            if isActive {
+                dataSource = searchResults
+            } else {
+                self.dataSource = mode == .favouriteList ? favoritePlayers : players
+            }
+        }
+    }
     
+    @Published var mode: TabMode = .playersList {
+        willSet {
+            self.dataSource = newValue == .favouriteList ? favoritePlayers : players
+        }
+    }
+    private (set) var dataSource: [Player] = []
     private let useCase: FavouritePlayersUseCaseProtocol
     
     init(useCase: FavouritePlayersUseCaseProtocol) {
         self.useCase = useCase
+        Task {
+            await loadFavoritePlayers()
+        }
     }
     
     // Metodo per scaricare i giocatori
@@ -35,6 +52,7 @@ class FavouritePlayersViewModel: ObservableObject {
         do {
             try await useCase.fetchPlayers(from: urlString)
             self.players = await useCase.getPlayers()
+            self.dataSource = players
             isLoading = false
         } catch {
             errorMessage = "Impossibile caricare i giocatori: \(error.localizedDescription)"
@@ -50,6 +68,7 @@ class FavouritePlayersViewModel: ObservableObject {
     // Metodo per ottenere i preferiti
     func loadFavoritePlayers() async {
         favoritePlayers = await useCase.getFavouritePlayers()
+        debugPrint("Fav players-> \(favoritePlayers)")
     }
     
     // Aggiungi un giocatore ai preferiti

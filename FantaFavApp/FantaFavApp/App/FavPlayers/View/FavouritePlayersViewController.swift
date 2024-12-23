@@ -24,7 +24,7 @@ class FavouritePlayersViewController: UIViewController {
     private var searchCancellable: AnyCancellable?
     
     //UI elements
-    @IBOutlet private weak var searchPlayersTextField: UITextField!
+    @IBOutlet private weak var searchPlayersTextField: SearchTextView!
     @IBOutlet private weak var tableView: UITableView!
     @IBOutlet private weak var playersListButton: UIButton!
     @IBOutlet private weak var playersIconImageView: UIImageView!
@@ -33,9 +33,6 @@ class FavouritePlayersViewController: UIViewController {
     @IBOutlet private weak var favIconImageView: UIImageView!
     @IBOutlet private weak var favTabLabel: UILabel!
     @IBOutlet private weak var favHeaderView: UIView!
-    
-    
-    private var dataSource: [Player] = []
     
     private let activityIndicator = UIActivityIndicatorView(style: .large)
     
@@ -100,9 +97,19 @@ class FavouritePlayersViewController: UIViewController {
         
         viewModel.$players
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] players in
+            .sink { [weak self] _ in
                 guard let `self` else { return }
-                self.dataSource = players
+                Task {
+                    await self.viewModel.loadFavoritePlayers()
+                    self.tableView.reloadData()
+                }
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$favoritePlayers
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let `self`, viewModel.mode == .favouriteList else { return }
                 self.tableView.reloadData()
             }
             .store(in: &cancellables)
@@ -139,7 +146,6 @@ class FavouritePlayersViewController: UIViewController {
         favTabLabel.textColor = PaletteColors.primary
         favHeaderView.isHidden = false
         searchPlayersTextField.isHidden = true
-        dataSource = viewModel.favoritePlayers
     }
     
     // MARK: - Helper Method to Update UI Based on Mode
@@ -160,7 +166,6 @@ class FavouritePlayersViewController: UIViewController {
         playersTabLabel.textColor = PaletteColors.primary
         favIconImageView.tintColor = PaletteColors.inactive
         favTabLabel.textColor = PaletteColors.inactive
-        dataSource = viewModel.players
     }
     
     // Caricamento dei giocatori
@@ -189,55 +194,49 @@ extension FavouritePlayersViewController: UITableViewDelegate {
 //MARK: - UITableViewDataSource
 extension FavouritePlayersViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        dataSource.count
+        viewModel.isFiltered ? viewModel.searchResults.count : viewModel.dataSource.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: PlayerTableViewCell.identifier, for: indexPath) as? PlayerTableViewCell,
-              indexPath.row < dataSource.count else {
+              indexPath.row < viewModel.dataSource.count else {
             return UITableViewCell()
         }
-        let player = dataSource[indexPath.row], isFavourite: Bool = viewModel.isFavorite(playerId: player.playerId)
+        let player = viewModel.dataSource[indexPath.row], isFavourite: Bool = viewModel.isFavorite(playerId: player.playerId)
         cell.delegate = self
-        cell.fillCell(player: player, isFavMode: viewModel.mode == .favouriteList, isFavourite: isFavourite)
+        cell.fillCell(player: player, isFavMode: viewModel.mode == .favouriteList, isFavourite: isFavourite, indexPath: indexPath)
         return cell
     }
     
 }
 //MARK: - PlayerTableViewCellDelegate
 extension FavouritePlayersViewController: PlayerTableViewCellDelegate {
-    func favouriteSelectionDidTap(playerId: Int) {
-        if viewModel.isFavorite(playerId: playerId) {
-            Task {
-                await viewModel.removeFromFavorites(playerId: playerId)
-            }
-        } else {
-            Task {
-                await viewModel.addToFavorites(playerId: playerId)
-            }
+    func favouriteSelectionDidTap(playerId: Int, at indexPath: IndexPath) {
+        Task {
+            await viewModel.isFavorite(playerId: playerId) ? viewModel.removeFromFavorites(playerId: playerId) : viewModel.addToFavorites(playerId: playerId)
+            tableView.reloadRows(at: [indexPath], with: .automatic)
         }
     }
     
 }
 //MARK: - UITextFieldDelegate
-extension FavouritePlayersViewController: UITextFieldDelegate {
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        guard let currentText = textField.text as NSString? else { return true }
-        let newText = currentText.replacingCharacters(in: range, with: string)
-        guard newText.count >= 3 else { return false }
-        Task {
-            await viewModel.searchPlayer(byName: newText)
-            tableView.reloadData() // Update the table view with filtered results
+extension FavouritePlayersViewController: SearchTextViewDelegate {
+    func textViewDidChange(text: String) {
+        if text.count >= 3 {
+            Task {
+                await viewModel.searchPlayer(byName: text)
+                viewModel.isFiltered = true
+                tableView.reloadData() // Update the table view with filtered results
+            }
         }
-        return true
-    }
-    
-    func textFieldShouldClear(_ textField: UITextField) -> Bool {
-        Task {
-            await viewModel.resetSearch()
-            tableView.reloadData() // Reset to show all players
+        else if viewModel.isFiltered && text.isEmpty {
+            Task {
+                await viewModel.resetSearch()
+                viewModel.isFiltered =  false
+                tableView.reloadData() // Reset to show all players
+            }
         }
-        return true
     }
 }
+
 
