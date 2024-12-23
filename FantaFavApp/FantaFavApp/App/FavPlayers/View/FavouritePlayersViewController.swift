@@ -15,9 +15,10 @@ struct PaletteColors {
 
 struct ViewControllerConstants {
     static let cellHeight: CGFloat = 80
+    static let playersViewController: String = "FavouritePlayersViewController"
 }
 
-class FavouritePlayersViewController: UIViewController {
+class FavouritePlayersViewController: UIViewController, ViewModelBindable {
 
     private var viewModel: FavouritePlayersViewModel!
     private var cancellables: Set<AnyCancellable> = []
@@ -45,7 +46,7 @@ class FavouritePlayersViewController: UIViewController {
     }
     
     init(viewModel: FavouritePlayersViewModel) {
-        super.init(nibName: "FavouritePlayersViewController", bundle: nil)
+        super.init(nibName: ViewControllerConstants.playersViewController, bundle: nil)
         self.viewModel = viewModel
         self.loadPlayers()
     }
@@ -83,18 +84,44 @@ class FavouritePlayersViewController: UIViewController {
         tableView.endEditing(true)
     }
     
-    private func bindViewModel() {
+    func bindViewModel() {
+        listenTabChange()
+        bindDataSource()
+        bindingLoadingObservations()
+    }
+    
+    private func listenTabChange() {
         viewModel.$mode
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] newMode in
                 guard let `self` else { return }
-                // Handle mode change
-                self.updateUI(for: newMode)
+                self.updateUI(for: newMode)///Handle mode change
                 self.tableView.reloadData()
             }
             .store(in: &cancellables)
+    }
+    
+    private func bindingLoadingObservations() {
+        viewModel.$isLoading
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isLoading in
+                guard let `self` else { return }
+                self.activityIndicator.isHidden = !isLoading
+                isLoading ? activityIndicator.startAnimating() : activityIndicator.stopAnimating()
+            }
+            .store(in: &cancellables)
         
+        viewModel.$errorMessage
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] errorMessage in
+                guard let `self`, let errorMessage else { return }
+                self.showError(message: errorMessage)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func bindDataSource() {
         viewModel.$players
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -111,23 +138,6 @@ class FavouritePlayersViewController: UIViewController {
             .sink { [weak self] _ in
                 guard let `self`, viewModel.mode == .favouriteList else { return }
                 self.tableView.reloadData()
-            }
-            .store(in: &cancellables)
-        
-        viewModel.$isLoading
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] isLoading in
-                guard let `self` else { return }
-                self.activityIndicator.isHidden = !isLoading
-                isLoading ? activityIndicator.startAnimating() : activityIndicator.stopAnimating()
-            }
-            .store(in: &cancellables)
-        
-        viewModel.$errorMessage
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] errorMessage in
-                guard let `self`, let errorMessage else { return }
-                self.showError(message: errorMessage)
             }
             .store(in: &cancellables)
     }
@@ -168,19 +178,18 @@ class FavouritePlayersViewController: UIViewController {
         favTabLabel.textColor = PaletteColors.inactive
     }
     
-    // Caricamento dei giocatori
     private func loadPlayers() {
         Task {
-            await viewModel.fetchPlayers(from: "https://content.fantacalcio.it/test/test.json")
+            await viewModel.fetchPlayers(from: PlayersRepository.accessDataPoint)
         }
     }
     
     //ACTIONS
-    @IBAction func playersListTabAction(_ sender: UIButton) {
+    @IBAction private func playersListTabAction(_ sender: UIButton) {
         viewModel.mode = .playersList
     }
     
-    @IBAction func favouriteListTabAction(_ sender: UIButton) {
+    @IBAction private func favouriteListTabAction(_ sender: UIButton) {
         viewModel.mode = .favouriteList
     }
     

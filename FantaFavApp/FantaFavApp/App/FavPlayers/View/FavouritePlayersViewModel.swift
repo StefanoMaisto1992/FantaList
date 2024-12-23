@@ -7,6 +7,10 @@
 
 import Foundation
 
+protocol ViewModelBindable {
+    func bindViewModel()
+}
+
 @MainActor
 class FavouritePlayersViewModel: ObservableObject {
     
@@ -68,7 +72,6 @@ class FavouritePlayersViewModel: ObservableObject {
     // Metodo per ottenere i preferiti
     func loadFavoritePlayers() async {
         favoritePlayers = await useCase.getFavouritePlayers()
-        debugPrint("Fav players-> \(favoritePlayers)")
     }
     
     // Aggiungi un giocatore ai preferiti

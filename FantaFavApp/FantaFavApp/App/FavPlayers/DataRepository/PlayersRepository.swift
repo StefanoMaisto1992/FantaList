@@ -9,6 +9,8 @@ import Foundation
 
 extension PlayersRepository {
     typealias UserDefaultsKey = String
+    static let accessDataPoint: String = "https://content.fantacalcio.it/test/test.json"
+    static let queuLabel: String = "PlayersRepositoryQueue"
     static let favoritePlayerIdentifiers: UserDefaultsKey = "favoritePlayerIds"
     
     static func initializeFavoritesIfNeeded() {
@@ -20,11 +22,11 @@ extension PlayersRepository {
 }
 
 actor PlayersRepository {
-    private(set) var players: [Player] = []
+    private (set) var players: [Player] = []
     private (set) var favoritePlayerIds: Set<Int> = [] // ID dei calciatori preferiti
     private (set) var favoritePlayers: [Player] = []
     
-    private let queue = DispatchQueue(label: "PlayersRepositoryQueue", attributes: .concurrent)
+    private let queue = DispatchQueue(label: PlayersRepository.queuLabel, attributes: .concurrent)
     
     func fetchPlayers(from urlString: String) async throws {
         guard let url = URL(string: urlString) else {
@@ -70,11 +72,7 @@ actor PlayersRepository {
     
     func removeFromFavorites(playerId: Int) {
         removeFavoritePlayerId(playerId)
-        self.favoritePlayerIds.remove(playerId)
-    }
-    
-    private func saveFavoritePlayerIds() {
-        UserDefaults.standard.set(favoritePlayerIds, forKey: "favoritePlayerIds")
+        favoritePlayerIds.remove(playerId)
     }
     
     private func loadFavoritePlayerIds() {
@@ -85,19 +83,16 @@ actor PlayersRepository {
     }
     
     private func removeFavoritePlayerId(_ playerId: Int) {
-        // Recupera l'array esistente da UserDefaults
         var favoritePlayerIds = UserDefaults.standard.array(forKey: PlayersRepository.favoritePlayerIdentifiers) as? [Int] ?? []
         favoritePlayerIds.removeAll { $0 == playerId }
         UserDefaults.standard.set(favoritePlayerIds, forKey: PlayersRepository.favoritePlayerIdentifiers)
     }
     
-    func addFavoritePlayerId(_ playerId: Int) {
+    private func addFavoritePlayerId(_ playerId: Int) {
         var favoritePlayerIds = UserDefaults.standard.array(forKey: PlayersRepository.favoritePlayerIdentifiers) as? [Int] ?? []
         guard !favoritePlayerIds.contains(playerId) else { return }
-        // Aggiungi il nuovo ID all'array
         favoritePlayerIds.append(playerId)
-        // Aggiorna UserDefaults con l'array modificato
-        UserDefaults.standard.set(favoritePlayerIds, forKey: PlayersRepository.favoritePlayerIdentifiers)
+        UserDefaults.standard.set(favoritePlayerIds, forKey: PlayersRepository.favoritePlayerIdentifiers)/// Aggiorna UserDefaults con l'array modificato
     }
     
 }
